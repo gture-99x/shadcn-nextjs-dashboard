@@ -21,6 +21,7 @@ import {
 	AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useInbox } from "@/lib/inbox/inbox-context";
 
 const sidebarGroups = [
 	{
@@ -94,7 +95,7 @@ const sidebarGroups = [
 				title: "Messages",
 				href: "/dashboard/messages",
 				icon: MessageSquare,
-				badge: "5",
+				badge: null,
 			},
 			{
 				title: "Database",
@@ -125,6 +126,7 @@ interface SidebarProps {
 export function Sidebar({ onMobileClose }: SidebarProps) {
 	const pathname = usePathname();
 	const [isCollapsed, setIsCollapsed] = useState(false);
+	const { unreadCount } = useInbox();
 
 	const handleLinkClick = () => {
 		if (onMobileClose) {
@@ -186,6 +188,10 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
 							{group.items.map((item) => {
 								const isActive = pathname === item.href;
 								const Icon = item.icon;
+								const badge =
+									item.href === "/dashboard/messages" && unreadCount > 0
+										? String(unreadCount > 99 ? "99+" : unreadCount)
+										: item.badge;
 
 								return (
 									<Link
@@ -209,8 +215,20 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
 											)}
 										/>
 										{!isCollapsed && (
-											<span className="group-hover:translate-x-0.5 transition-transform duration-200">
+											<span className="flex-1 group-hover:translate-x-0.5 transition-transform duration-200">
 												{item.title}
+											</span>
+										)}
+										{!isCollapsed && badge && (
+											<span
+												className={cn(
+													"ml-auto rounded-full px-2 py-0.5 text-xs font-semibold",
+													isActive
+														? "bg-primary-foreground/20 text-primary-foreground"
+														: "bg-muted text-muted-foreground",
+												)}
+											>
+												{badge}
 											</span>
 										)}
 									</Link>
