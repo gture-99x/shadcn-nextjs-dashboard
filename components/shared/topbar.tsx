@@ -1,5 +1,6 @@
 "use client";
-import { Bell, Search } from "lucide-react";
+import { Inbox, Search } from "lucide-react";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,10 +14,11 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppSwitcher } from "./app-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
-
-
+import { useInbox } from "@/lib/inbox/inbox-context";
 
 export function Topbar() {
+	const { unreadCount } = useInbox();
+
 	return (
 		<div className="flex h-16 items-center justify-between border-b px-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
 			{/* Search */}
@@ -39,17 +41,22 @@ export function Topbar() {
 				{/* Theme Toggle */}
 				<ThemeToggle />
 
-				{/* Notifications */}
+				{/* Inbox */}
 				<Button
 					variant="ghost"
 					size="icon"
 					className="relative h-9 w-9 hover:bg-muted transition-colors"
-					aria-label="Notifications"
+					aria-label="Inbox"
+					asChild
 				>
-					<Bell className="h-4 w-4" />
-					<span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-medium">
-						3
-					</span>
+					<Link href="/dashboard/messages">
+						<Inbox className="h-4 w-4" />
+						{unreadCount > 0 && (
+							<span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-medium">
+								{unreadCount > 99 ? "99+" : unreadCount}
+							</span>
+						)}
+					</Link>
 				</Button>
 
 				{/* Profile */}
