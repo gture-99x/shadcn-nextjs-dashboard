@@ -21,6 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 const profileFormSchema = z.object({
 	username: z
@@ -76,6 +77,11 @@ export default function SettingsPage() {
 
 	function onSubmit(data: ProfileFormValues) {
 		console.log("Profile data:", data);
+		track("settings_saved", {
+			section: "profile",
+			has_bio: Boolean(data.bio),
+			url_count: data.urls?.length ?? 0,
+		});
 		toast.success("Profile updated successfully!", {
 			description: "Your profile has been updated.",
 		});

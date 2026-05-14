@@ -66,6 +66,57 @@ This project uses shadcn/ui components which are fully customizable. You can mod
 - `app/globals.css` - For global styles
 - `components.json` - For component configurations
 
+## 📊 Analytics (PostHog) + Claude Code MCP
+
+This project ships with [PostHog](https://posthog.com) for client-side user behavior analytics. Once data is flowing, you can connect Claude Code to PostHog's MCP server and query your analytics in natural language.
+
+### 1. Configure environment variables
+
+Copy `.env.local.example` to `.env.local` and fill in:
+
+```bash
+NEXT_PUBLIC_POSTHOG_KEY=phc_xxx
+NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com  # or https://eu.i.posthog.com
+```
+
+Grab the project API key from your PostHog project settings.
+
+### 2. Configure GitHub Pages deploy
+
+Add these repository secrets under **Settings → Secrets and variables → Actions**:
+
+- `POSTHOG_KEY` — your PostHog project API key
+- `POSTHOG_HOST` — `https://us.i.posthog.com` or `https://eu.i.posthog.com`
+
+They are inlined into the static bundle at build time by `.github/workflows/deploy-github-pages.yml`.
+
+### 3. What's tracked out of the box
+
+- `$pageview` — fired on every client-side route change
+- `$pageleave` — fired when users leave a page
+- Autocapture — clicks, form submissions, and rage clicks (default PostHog behavior)
+- Custom events:
+  - `dashboard_viewed` — when the main dashboard mounts
+  - `theme_toggled` — when the user changes the theme
+  - `settings_saved` — when the profile form is submitted
+
+### 4. Wire up Claude Code (MCP)
+
+Once you have data flowing, register PostHog's MCP server in Claude Code:
+
+```bash
+npx @posthog/wizard mcp add
+```
+
+This walks through OAuth and registers `https://mcp.posthog.com/mcp` (auto-routes US/EU). The MCP server is free and does not count against your event quota.
+
+After that you can ask Claude Code things like:
+
+- "What pages are users spending the most time on this week?"
+- "Build a funnel from `/login` → `/dashboard` → `settings_saved`."
+- "Show me retention for users who fired `dashboard_viewed`."
+- "Which dashboard route has the highest bounce rate?"
+
 ## 📚 Documentation
 
 For detailed documentation about the used technologies:

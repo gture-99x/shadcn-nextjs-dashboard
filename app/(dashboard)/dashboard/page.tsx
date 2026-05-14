@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Activity,
@@ -6,6 +7,7 @@ import {
 	DollarSign,
 	Users,
 } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 const stats = [
 	{
@@ -48,6 +50,10 @@ const stats = [
 
 
 export default function DashboardPage() {
+	useEffect(() => {
+		track("dashboard_viewed");
+	}, []);
+
 	return (
 		<div className="space-y-8">
 			{/* Header Section */}
