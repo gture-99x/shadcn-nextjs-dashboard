@@ -12,7 +12,7 @@ export function PHProvider({ children }: { children: React.ReactNode }) {
 		if (posthog.__loaded) return;
 		posthog.init(key, {
 			api_host:
-				process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
+				process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
 			capture_pageview: false,
 			capture_pageleave: true,
 			person_profiles: "identified_only",
