@@ -5,6 +5,7 @@ import {
 	useCallback,
 	useContext,
 	useEffect,
+	useMemo,
 	useState,
 } from "react";
 import type { InboxFilter } from "./inbox-service";
@@ -58,8 +59,16 @@ export function InboxProvider({ children }: { children: React.ReactNode }) {
 	}, []);
 
 	// Poll unread count every 30 s to simulate real-time updates.
+	// Skip polling while the tab is hidden so background tabs don't burn
+	// scheduler time / setState wakeups on a value no one can see.
 	useEffect(() => {
 		const id = setInterval(() => {
+			if (
+				typeof document !== "undefined" &&
+				document.visibilityState === "hidden"
+			) {
+				return;
+			}
 			setUnreadCount(inboxService.getUnreadCount());
 		}, POLL_INTERVAL_MS);
 		return () => clearInterval(id);
@@ -141,30 +150,50 @@ export function InboxProvider({ children }: { children: React.ReactNode }) {
 		refresh();
 	}, [selectedIds, refresh]);
 
-	return (
-		<InboxContext.Provider
-			value={{
-				messages,
-				unreadCount,
-				filter,
-				setFilter,
-				selectedIds,
-				toggleSelect,
-				toggleSelectAll,
-				clearSelection,
-				markAsRead,
-				markAllAsRead,
-				archiveMessage,
-				deleteMessage,
-				bulkMarkAsRead,
-				bulkArchive,
-				bulkDelete,
-				refresh,
-			}}
-		>
-			{children}
-		</InboxContext.Provider>
+	// Memoise the context value so consumers that only read a subset of
+	// these fields (Sidebar, Topbar — both read only `unreadCount`) don't
+	// re-render on every InboxProvider state transition just because the
+	// value object identity changed.
+	const value = useMemo<InboxContextValue>(
+		() => ({
+			messages,
+			unreadCount,
+			filter,
+			setFilter,
+			selectedIds,
+			toggleSelect,
+			toggleSelectAll,
+			clearSelection,
+			markAsRead,
+			markAllAsRead,
+			archiveMessage,
+			deleteMessage,
+			bulkMarkAsRead,
+			bulkArchive,
+			bulkDelete,
+			refresh,
+		}),
+		[
+			messages,
+			unreadCount,
+			filter,
+			setFilter,
+			selectedIds,
+			toggleSelect,
+			toggleSelectAll,
+			clearSelection,
+			markAsRead,
+			markAllAsRead,
+			archiveMessage,
+			deleteMessage,
+			bulkMarkAsRead,
+			bulkArchive,
+			bulkDelete,
+			refresh,
+		],
 	);
+
+	return <InboxContext.Provider value={value}>{children}</InboxContext.Provider>;
 }
 
 export function useInbox(): InboxContextValue {
