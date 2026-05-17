@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -115,18 +116,18 @@ export function AppSwitcher() {
 						return (
 							<DropdownMenuItem
 								key={app.name}
+								asChild
 								className="flex flex-col items-center p-3 rounded-lg hover:bg-gray-100 cursor-pointer"
-								onClick={() => {
-									window.location.href = app.href;
-									setIsOpen(false);
-								}}
+								onSelect={() => setIsOpen(false)}
 							>
-								<div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mb-2">
-									<Icon className="h-5 w-5 text-gray-600" />
-								</div>
-								<span className="text-xs font-medium text-center">
-									{app.name}
-								</span>
+								<Link href={app.href}>
+									<div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mb-2">
+										<Icon className="h-5 w-5 text-gray-600" />
+									</div>
+									<span className="text-xs font-medium text-center">
+										{app.name}
+									</span>
+								</Link>
 							</DropdownMenuItem>
 						);
 					})}

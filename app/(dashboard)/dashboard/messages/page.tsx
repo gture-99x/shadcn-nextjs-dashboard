@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { toast } from "sonner";
 import {
 	Archive,
@@ -169,7 +169,7 @@ interface MessageRowProps {
 	onClick: () => void;
 }
 
-function MessageRow({
+const MessageRow = memo(function MessageRow({
 	message,
 	isSelected,
 	isActive,
@@ -261,7 +261,7 @@ function MessageRow({
 			</div>
 		</div>
 	);
-}
+});
 
 // ─── Detail Panel ─────────────────────────────────────────────────────────────
 
@@ -400,20 +400,29 @@ export default function MessagesPage() {
 	const [activeMessage, setActiveMessage] = useState<InboxMessage | null>(null);
 	const [composeOpen, setComposeOpen] = useState(false);
 
-	const handleRowClick = (msg: InboxMessage) => {
-		setActiveMessage(msg);
-		if (!msg.read) markAsRead(msg.id);
-	};
+	const handleRowClick = useCallback(
+		(msg: InboxMessage) => {
+			setActiveMessage(msg);
+			if (!msg.read) markAsRead(msg.id);
+		},
+		[markAsRead],
+	);
 
-	const handleArchive = (id: string) => {
-		if (activeMessage?.id === id) setActiveMessage(null);
-		archiveMessage(id);
-	};
+	const handleArchive = useCallback(
+		(id: string) => {
+			setActiveMessage((current) => (current?.id === id ? null : current));
+			archiveMessage(id);
+		},
+		[archiveMessage],
+	);
 
-	const handleDelete = (id: string) => {
-		if (activeMessage?.id === id) setActiveMessage(null);
-		deleteMessage(id);
-	};
+	const handleDelete = useCallback(
+		(id: string) => {
+			setActiveMessage((current) => (current?.id === id ? null : current));
+			deleteMessage(id);
+		},
+		[deleteMessage],
+	);
 
 	const handleBulkArchive = () => {
 		if (activeMessage && selectedIds.has(activeMessage.id)) setActiveMessage(null);
@@ -590,13 +599,13 @@ export default function MessagesPage() {
 								</div>
 							) : (
 								messages.map((msg) => (
-									<MessageRow
+									<MessageListItem
 										key={msg.id}
 										message={msg}
 										isSelected={selectedIds.has(msg.id)}
 										isActive={activeMessage?.id === msg.id}
-										onSelect={() => toggleSelect(msg.id)}
-										onClick={() => handleRowClick(msg)}
+										toggleSelect={toggleSelect}
+										onRowClick={handleRowClick}
 									/>
 								))
 							)}
@@ -623,3 +632,45 @@ export default function MessagesPage() {
 		</div>
 	);
 }
+
+// ─── Memoised list item wrapper ───────────────────────────────────────────────
+// Wrapping the row in its own memoised component lets React skip re-rendering
+// rows whose `isSelected` / `isActive` / `message` props didn't change. It also
+// keeps the per-row callbacks stable across renders (they bind on `msg.id`),
+// so `memo` actually short-circuits instead of getting a fresh closure on
+// every parent render.
+
+interface MessageListItemProps {
+	message: InboxMessage;
+	isSelected: boolean;
+	isActive: boolean;
+	toggleSelect: (id: string) => void;
+	onRowClick: (msg: InboxMessage) => void;
+}
+
+const MessageListItem = memo(function MessageListItem({
+	message,
+	isSelected,
+	isActive,
+	toggleSelect,
+	onRowClick,
+}: MessageListItemProps) {
+	const handleSelect = useCallback(
+		() => toggleSelect(message.id),
+		[toggleSelect, message.id],
+	);
+	const handleClick = useCallback(
+		() => onRowClick(message),
+		[onRowClick, message],
+	);
+
+	return (
+		<MessageRow
+			message={message}
+			isSelected={isSelected}
+			isActive={isActive}
+			onSelect={handleSelect}
+			onClick={handleClick}
+		/>
+	);
+});
